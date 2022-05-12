@@ -51,19 +51,29 @@ const offers = (app) => {
     authValidation,
     checkRoles("employer", "admin"),
     async (req, res) => {
-      const { idPostOwner } = req.params;
-      const offers = await offerServ.getByPostOwner(idPostOwner);
-      return res.json(offers);
+      try {
+        const { idPostOwner } = req.params;
+        const offers = await offerServ.getByPostOwner(idPostOwner);
+        if (offers.length === 0) {
+          return res.json({ error: true, message: "Offers not found " });
+        }
+        return res.json(offers);
+      } catch (error) {
+        return res.status(400).json({ error: true, message: "Id invalid" });
+      }
     }
   );
 
   router.post("/", authValidation, checkRoles("employer"), async (req, res) => {
-    const { id } = req.user;
-    const body = req.body;
-    const newOffer = await offerServ.create(body, id);
-    return res.json(newOffer);
+    try {
+      const { id } = req.user;
+      const body = req.body;
+      const newOffer = await offerServ.create(body, id);
+      return res.json(newOffer);
+    } catch ({ message }) {
+      return res.json({ error: true, message: message });
+    }
   });
-
   router.put(
     "/:idOffer",
     authValidation,
@@ -71,21 +81,25 @@ const offers = (app) => {
     async (req, res) => {
       const { id } = req.user;
       const { idOffer } = req.params;
-
       const offerUpdated = await offerServ.assignApplicant(idOffer, id);
       return res.json(offerUpdated);
     }
   );
-
-  router.put(
+  router.patch(
     "/:id",
     authValidation,
-    checkRoles("employer", "admin"),
+    checkRoles("employer"),
     async (req, res) => {
-      const { id } = req.params;
-      const body = req.body;
-      const updatedOffer = await offerServ.update(id, body);
-      return res.json(updatedOffer);
+      try {
+        const idEmployer = req.user.id;
+        const { id } = req.params;
+        const body = req.body;
+
+        const updatedOffer = await offerServ.update(idEmployer, id, body);
+        return res.json(updatedOffer);
+      } catch (error) {
+        return res.status(400).json({ error: true, message: "Id invalid" });
+      }
     }
   );
 
@@ -94,9 +108,20 @@ const offers = (app) => {
     authValidation,
     checkRoles("employer", "admin"),
     async (req, res) => {
-      const { id } = req.params;
-      const deletedOffer = await offerServ.delete(id);
-      return res.json(deletedOffer);
+      try {
+        const { id } = req.params;
+        const deletedOffer = await offerServ.delete(id);
+
+        if (!deletedOffer) {
+          return res.status(404).json({
+            error: true,
+            message: "Offer not found",
+          });
+        }
+        return res.json({ messaje: "Deleted", deletedOffer });
+      } catch (error) {
+        return res.status(400).json({ error: true, message: "Id invalid" });
+      }
     }
   );
 };

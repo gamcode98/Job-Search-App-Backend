@@ -4,12 +4,31 @@ const Schema = mongoose.Schema;
 
 const offerSchema = new Schema(
   {
-    name: String,
-    description: String,
-    category: [String],
-    country: [String],
-    applicants: [String],
-    salary: Number,
+    name: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: [String],
+      required: true,
+      validate: (v) => Array.isArray(v) && v.length > 0,
+    },
+    country: {
+      type: [String],
+      required: true,
+      validate: (v) => Array.isArray(v) && v.length > 0,
+    },
+    applicants: {
+      type: [String],
+    },
+    salary: {
+      type: Number,
+      required: true,
+    },
     postOwnerId: {
       type: Schema.Types.ObjectId,
       ref: "User",

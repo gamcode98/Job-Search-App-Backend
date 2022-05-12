@@ -55,6 +55,12 @@ class AuthService {
       return this.#getUserData(user);
     }
 
+    if (!user) {
+      return {
+        error: true,
+        message: "User not found",
+      };
+    }
     return {
       error: true,
       message: "Wrong credentials",

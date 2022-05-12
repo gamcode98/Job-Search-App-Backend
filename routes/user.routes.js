@@ -15,8 +15,12 @@ const users = (app) => {
   app.use("/api/users", router);
 
   router.get("/", authValidation, checkRoles("admin"), async (req, res) => {
-    const users = await userServ.getAll();
-    return res.json(users);
+    try {
+      const users = await userServ.getAll();
+      return res.json(users);
+    } catch (error) {
+      return res.json(error);
+    }
   });
 
   router.get(
@@ -24,16 +28,33 @@ const users = (app) => {
     authValidation,
     checkRoles("admin"),
     async (req, res) => {
-      const { email } = req.params;
-      const user = await userServ.getByEmail(email);
-      return res.json(user);
+      try {
+        const { email } = req.params;
+        const user = await userServ.getByEmail(email);
+        const userData = {
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          id: user.id,
+        };
+        return res.json(userData);
+      } catch (error) {
+        console.log(error);
+        return res
+          .status(404)
+          .json({ error: true, message: "Email not found" });
+      }
     }
   );
 
   router.post("/", authValidation, checkRoles("admin"), async (req, res) => {
-    const body = req.body;
-    const newUser = await authServ.signup(body);
-    return res.json(newUser);
+    try {
+      const body = req.body;
+      const newUser = await authServ.signup(body);
+      return res.json(newUser);
+    } catch (error) {
+      return res.json(error);
+    }
   });
 
   router.put(
@@ -57,9 +78,19 @@ const users = (app) => {
     authValidation,
     checkRoles("postulant", "employer", "admin"),
     async (req, res) => {
-      const { id } = req.params;
-      const deletedUser = await userServ.delete(id);
-      return res.json(deletedUser);
+      try {
+        const { id } = req.params;
+        const deletedUser = await userServ.delete(id);
+        if (!deletedUser) {
+          return res.status(404).json({
+            error: true,
+            message: "User not found",
+          });
+        }
+        return res.json({ message: "deleted", deletedUser });
+      } catch (error) {
+        return res.status(400).json({ error: true, message: "Id invalid" });
+      }
     }
   );
 };

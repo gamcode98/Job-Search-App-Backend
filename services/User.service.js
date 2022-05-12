@@ -13,6 +13,13 @@ class UserService {
   }
 
   async create(data) {
+    const userFound = await UserModel.findOne({ email: data.email });
+    if (userFound) {
+      return {
+        error: true,
+        message: "Existing email",
+      };
+    }
     const newUser = await UserModel.create(data);
     return newUser;
   }

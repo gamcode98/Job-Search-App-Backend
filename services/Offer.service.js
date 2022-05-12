@@ -25,12 +25,12 @@ class OfferService {
   }
 
   async getOffersByCountry(country) {
-    const offers = await OfferModel.find({ country });
+    const offers = await OfferModel.find({ country }).select("-applicants");
     return offers;
   }
 
   async getOffersByCategory(category) {
-    const offers = await OfferModel.find({ category });
+    const offers = await OfferModel.find({ category }).select("-applicants");
     return offers;
   }
 
@@ -43,7 +43,14 @@ class OfferService {
     return offer;
   }
 
-  async update(id, data) {
+  async update(idEmployer, id, data) {
+    const ownerEmployer = await OfferModel.findById(id);
+    if (ownerEmployer.postOwnerId.toString() !== idEmployer) {
+      return {
+        error: true,
+        message: "Action denied",
+      };
+    }
     const updatedOffer = await OfferModel.findByIdAndUpdate(id, data, {
       new: true,
     });
