@@ -1,8 +1,9 @@
 const UserModel = require("../models/user");
+const bcrypt = require("bcrypt");
 
 class UserService {
   async getAll() {
-    const users = await UserModel.find();
+    const users = await UserModel.find().select("-password");
     return users;
   }
 
@@ -17,7 +18,13 @@ class UserService {
   }
 
   async update(id, data) {
-    const updatedUser = await UserModel.findByIdAndUpdate(id, data, {
+    const salt = await bcrypt.genSalt();
+    const hash = await bcrypt.hash(data.password, salt);
+    const userData = {
+      ...data,
+      password: hash,
+    };
+    const updatedUser = await UserModel.findByIdAndUpdate(id, userData, {
       new: true,
     });
 
